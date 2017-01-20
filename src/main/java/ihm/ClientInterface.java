@@ -2,6 +2,7 @@ package ihm;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -45,6 +47,8 @@ public class ClientInterface extends JFrame implements Observer {
 	JLabel ipLabel;
 	JTextField portConnect;
 	JLabel portLabel;
+	
+	JButton disConnect;
 	
 	private String IP;
 	private int port = 0;
@@ -101,17 +105,26 @@ public class ClientInterface extends JFrame implements Observer {
 		// - Connect
 		
 		connect = new JPanel();
+		connect.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 5));
 		bConnect = new JButton("Connection");
 		ipConnect = new JTextField(defIP);
+		ipConnect.setColumns(6);
 		ipLabel = new JLabel("IP :");
 		portConnect = new JTextField(defPort);
+		portConnect.setColumns(6);
 		portLabel = new JLabel("Port : ");
+		
+		connect.setBorder(BorderFactory.createTitledBorder("Se connecter à : "));
+		
 		
 		connect.add(ipLabel);
 		connect.add(ipConnect);
 		connect.add(portLabel);
 		connect.add(portConnect);
 		connect.add(bConnect);
+		
+		disConnect = new JButton("Déconnection");
+		connect.add(disConnect);
 		
 		// - Layout
 
@@ -130,11 +143,7 @@ public class ClientInterface extends JFrame implements Observer {
 		else {
 			port = Integer.parseInt(tmp);
 		}
-		/*String tmp2 = JOptionPane.showInputDialog(mainPanel, "Saisir le port cible", defPort);
-		if (tmp2 == null || tmp.isEmpty() ) forceClose();
-		else {
-			port2 = Integer.parseInt(tmp);
-		}*/
+		
 		pseudo = JOptionPane.showInputDialog(mainPanel, "Saisir le pseudo", defPseudo);
 		if (pseudo == null || pseudo.isEmpty()) forceClose();
 		
@@ -147,6 +156,7 @@ public class ClientInterface extends JFrame implements Observer {
 		
 		//valSaisie.setMnemonic(KeyEvent.VK_ENTER);
 		
+		//Saisie de nouveau message
 		valSaisie.addActionListener(new ActionListener() {
 			
 			@Override
@@ -167,6 +177,7 @@ public class ClientInterface extends JFrame implements Observer {
 			}
 		});
 		
+		//Connection a un utilisateur
 		bConnect.addActionListener(new ActionListener() {
 			
 			@Override
@@ -192,7 +203,20 @@ public class ClientInterface extends JFrame implements Observer {
 			}
 		});
 		
+		//Déconnection
+		disConnect.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				peer.leaveMainChord();
+				peer.deleteObserver(ClientInterface.this);
+			}
+		});
+		
 	}
+	
+	
 	
 	//Generation message à envoyer
 	private Map<String, String> preparerMessage(String m) {
