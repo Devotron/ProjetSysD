@@ -77,6 +77,7 @@ public class MiniClient {
 
     public static void main(String[] args) {
 
-        new MiniClient(args[0], Integer.parseInt(args[1]), args[2]).connect();
+//        new MiniClient(args[0], Integer.parseInt(args[1]), args[2]).connect();
+        new MiniClient("127.0.0.1", 8888, "test").connect();
     }
 }
