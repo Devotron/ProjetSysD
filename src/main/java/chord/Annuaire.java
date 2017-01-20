@@ -1,6 +1,6 @@
 package chord;
 
-import test.ServiceClient;
+
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -35,7 +35,6 @@ public class Annuaire {
             System.out.println("Server launch " + server.getLocalPort());
             while (waitClient) {
                 Socket socket = server.accept();
-
             }
             System.out.println("Server close");
             server.close();
@@ -48,4 +47,12 @@ public class Annuaire {
         return this.users;
     }
 
+    public synchronized void addUser(Peer p){
+        this.users.add(p);
+    }
+
+    public static void main(String[] args) {
+        Annuaire annuaire = new Annuaire(1000);
+        annuaire.launch();
+    }
 }
