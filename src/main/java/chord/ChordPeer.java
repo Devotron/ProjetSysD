@@ -46,7 +46,8 @@ public class ChordPeer extends Observable {
     }
 
     public static void main(String[] args) {
-        test2();
+
+        test3();
     }
 
     static void test0() {
