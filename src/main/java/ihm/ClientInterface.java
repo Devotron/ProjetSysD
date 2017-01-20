@@ -12,6 +12,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -25,7 +27,7 @@ import javax.swing.border.Border;
 
 import chord.ChordPeer;
 
-public class ClientInterface extends JFrame {
+public class ClientInterface extends JFrame implements Observer {
 
 	JPanel mainPanel;
 
@@ -138,6 +140,8 @@ public class ClientInterface extends JFrame {
 		
 		peer = new ChordPeer(pseudo, port, IP);
 		
+		peer.addObserver(this);
+		
 		System.out.println("IP : " + peer.getMe().getIp() + ", Port : " + peer.getMe().getPort() + ", Pseudo : " + peer.getMe().getPseudo() );
 
 		
@@ -153,8 +157,7 @@ public class ClientInterface extends JFrame {
 					String m = "[" + pseudo + "] : ";
 					m += entreeMsg.getText() + "\n";
 					
-					Map message = preparerMessage(m);
-					peer.forwardMessage(message);
+					peer.forwardMessage(peer.buildTextMessage(entreeMsg.getText()));
 					
 					chatBox.append(m);
 					
@@ -210,6 +213,14 @@ public class ClientInterface extends JFrame {
 		ClientInterface client = new ClientInterface();
 		
 		
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		Map<String, String> msg = (Map<String, String>)arg;
+		if ("msg".equals(msg.get("type"))) {
+            chatBox.append(msg.get("pseudo") + " : " + msg.get("content"));
+        }
 	}
 
 }
