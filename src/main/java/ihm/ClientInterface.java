@@ -161,7 +161,7 @@ public class ClientInterface extends JFrame implements Observer {
 					
 					chatBox.append(m);
 					
-					System.out.println("Ajout saisie");
+					System.out.println("Ajout d'une saisie");
 					entreeMsg.setText("");
 				}
 			}
@@ -219,7 +219,7 @@ public class ClientInterface extends JFrame implements Observer {
 	public void update(Observable o, Object arg) {
 		Map<String, String> msg = (Map<String, String>)arg;
 		if ("msg".equals(msg.get("type"))) {
-            chatBox.append(msg.get("pseudo") + " : " + msg.get("content"));
+            chatBox.append("[" + msg.get("pseudo") + "] : " + msg.get("content") + "\n");
         }
 	}
 
