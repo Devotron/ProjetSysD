@@ -10,9 +10,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by JuIngong on 19/01/2017.
@@ -35,17 +33,20 @@ public class ChordPeer {
 
     private TreeMap<Integer, ChordPeer> fingerTable;
 
+    private Map<String, List<Peer>> chatRooms;
+
+    private String myChat;
+
     public ChordPeer(String pseudo, int port, String ip) {
         this.me = new Peer(pseudo, port, ip);
         new Thread(() -> startClientServer(port)).start();
         this.pred = null;
+        chatRooms = new HashMap<>();
         this.succ = null;
     }
 
     public static void main(String[] args) {
         test2();
-
-
     }
 
     static void test0() {
@@ -60,22 +61,24 @@ public class ChordPeer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        c1.joinChatRoom("test");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Map<String, String> test = new HashMap<>();
+        test.put("type", "msg");
+        test.put("exp", "" + c1.getMe().getId());
+        test.put("content", "blabla");
+        c1.forwardMessage(test);
 
     }
 
     static void test3() {
-        ChordPeer c1 = new ChordPeer("test1", 1264, "127.0.0.1");
+        ChordPeer c2 = new ChordPeer("test2", 1264, "127.0.0.1");
         try {
-            c1.joinChord(new Socket("127.0.0.1", 1224));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static void test4() {
-        ChordPeer c2 = new ChordPeer("test2", 1268, "127.0.0.1");
-        try {
-            c2.joinChord(new Socket("127.0.0.1", 1294));
+            c2.joinChord(new Socket("127.0.0.1", 1234));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,26 +93,14 @@ public class ChordPeer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        c2.forwardMessage(test);
+        c2.joinChatRoom("test");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        c2.forwardMessage(test);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        c2.forwardMessage(test);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        c2.leaveMainChord();
+        c2.sendToChatRoom("Blablou");
+        c2.leaveChatRoom();
     }
 
     static void test2() {
@@ -130,7 +121,14 @@ public class ChordPeer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        c2.leaveMainChord();
+        c2.joinChatRoom("test");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        c2.sendToChatRoom("Blablou");
+        c2.leaveChatRoom();
     }
 
     private void startClientServer(int portNum) {
@@ -190,6 +188,70 @@ public class ChordPeer {
         }
     }
 
+    public Map<String, List<Peer>> getChatRoomsList() {
+        Map<String, String> msg = new HashMap<>();
+        msg.put("type", "salon");
+        msg.put("goal", "info");
+        sendMsg(msg, sSock);
+        Gson gson = new Gson();
+        Type mapType = new TypeToken<Map<String, List<Peer>>>() {
+        }.getType();
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(sSock.getInputStream()));
+            String s = in.readLine();
+            return gson.fromJson(s, mapType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void joinChatRoom(String name) {
+        Map<String, String> msg = new HashMap<>();
+        if (chatRooms.get(name) != null) {
+            msg.put("type", "salon");
+            msg.put("goal", "join");
+            msg.put("name", name);
+            msg.put("ip", me.getIp());
+            msg.put("port", Integer.toString(me.getPort()));
+            msg.put("pseudo", me.getPseudo());
+        } else {
+            msg.put("type", "salon");
+            msg.put("goal", "create");
+            msg.put("name", name);
+            msg.put("ip", me.getIp());
+            msg.put("port", Integer.toString(me.getPort()));
+            msg.put("pseudo", me.getPseudo());
+            List<Peer> chat = new ArrayList<>();
+            chat.add(me);
+            chatRooms.put(name, chat);
+        }
+        myChat = name;
+        forwardMessage(msg);
+    }
+
+    public void sendToChatRoom(String s) {
+        Map<String, String> msg = new HashMap<>();
+        msg.put("type", "salon");
+        msg.put("name", myChat);
+        msg.put("goal", "msg");
+        msg.put("exp", Integer.toString(me.getId()));
+        msg.put("content", s);
+        forwardMessage(msg);
+    }
+
+    public void leaveChatRoom() {
+        Map<String, String> msg = new HashMap<>();
+        msg.put("type", "salon");
+        msg.put("name", myChat);
+        msg.put("goal", "leave");
+        msg.put("exp", Integer.toString(me.getId()));
+        forwardMessage(msg);
+        chatRooms.get(myChat).remove(me);
+        myChat = "";
+    }
+
+
     public void joinChord(Socket socket) {
         Map<String, String> msg = new HashMap<>();
         msg.put("type", "find");
@@ -223,6 +285,7 @@ public class ChordPeer {
             pred = new Peer(msg.get("pseudo"), Integer.parseInt(msg.get("port")), msg.get("ip"));
             try {
                 pSock = new Socket(pred.getIp(), pred.getPort());
+                chatRooms = getChatRoomsList();
                 msg.clear();
                 msg.put("type", "succ");
                 msg.put("ip", me.getIp());
@@ -306,7 +369,6 @@ public class ChordPeer {
 
     public void sendMsg(Map<String, String> msg, Socket con) {
         Gson gson = new Gson();
-        gson.toJson(msg);
         try {
             PrintWriter out = new PrintWriter(con.getOutputStream());
             out.println(gson.toJson(msg));
@@ -355,6 +417,56 @@ public class ChordPeer {
                             System.out.println(msg.get("content"));
                         }
                     }
+                    if ("salon".equals(msg.get("type"))) {
+                        if ("info".equals(msg.get("goal"))) {
+                            Gson gson = new Gson();
+                            try {
+                                PrintWriter out = new PrintWriter(pSock.getOutputStream());
+                                out.println(gson.toJson(chatRooms));
+                                out.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else if ("leave".equals(msg.get("goal"))) {
+                            Peer t = null;
+                            for (Peer p : chatRooms.get(msg.get("name"))) {
+                                if (p.getId() == Integer.parseInt(msg.get("exp"))) {
+                                    t = p;
+                                }
+                            }
+                            chatRooms.get(msg.get("name")).remove(t);
+                            if (succ.getId() != Integer.parseInt(msg.get("exp"))) {
+                                forwardMessage(msg);
+                            }
+                        } else if ("join".equals(msg.get("goal"))) {
+                            Peer p = new Peer(msg.get("pseudo"), Integer.parseInt(msg.get("port")), msg.get("ip"));
+                            chatRooms.get(msg.get("name")).add(p);
+                            if (succ.getId() != p.getId()) {
+                                forwardMessage(msg);
+                            }
+                        } else if ("create".equals(msg.get("goal"))) {
+                            Peer p = new Peer(msg.get("pseudo"), Integer.parseInt(msg.get("port")), msg.get("ip"));
+                            List<Peer> chat = new ArrayList<>();
+                            chat.add(p);
+                            chatRooms.put(msg.get("name"), chat);
+                            if (succ.getId() != p.getId()) {
+                                forwardMessage(msg);
+                            }
+                        } else if ("msg".equals(msg.get("goal"))) {
+                            if (msg.get("name").equals(myChat)) {
+                                if (!Integer.toString(succ.getId()).equals(msg.get("exp"))) {
+                                    System.out.println(msg.get("content"));
+                                    forwardMessage(msg);
+                                } else {
+                                    System.out.println(msg.get("content"));
+                                }
+                            } else {
+                                if (!Integer.toString(succ.getId()).equals(msg.get("exp"))) {
+                                    forwardMessage(msg);
+                                }
+                            }
+                        }
+                    }
                     if ("leave".equals(msg.get("type")) && msg.get("pseudoPred") != null) {
                         if (me.getPseudo().equals(msg.get("pseudoPred"))) {
                             succ = null;
@@ -368,7 +480,6 @@ public class ChordPeer {
                             pThread.interrupt();
                         } else {
                             try {
-                                //pSock.close();
                                 pred = new Peer(msg.get("pseudoPred"), Integer.parseInt(msg.get("portPred")), msg.get("ipPred"));
                                 pSock = new Socket(msg.get("ipPred"), Integer.parseInt(msg.get("portPred")));
                                 msg.clear();

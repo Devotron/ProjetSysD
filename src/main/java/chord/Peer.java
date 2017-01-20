@@ -1,11 +1,13 @@
 package chord;
 
+import java.io.Serializable;
+
 /**
  * Created on 19/01/2017.
  *
  * @author JuIngong
  */
-public class Peer {
+public class Peer implements Serializable{
     private String pseudo;
     private int port;
     private String ip;
