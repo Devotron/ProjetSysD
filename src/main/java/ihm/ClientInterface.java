@@ -15,6 +15,7 @@ import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -35,6 +36,13 @@ public class ClientInterface extends JFrame {
 	JPanel msgPanel;
 	JTextField entreeMsg;
 	JButton valSaisie;
+	
+	JPanel connect;
+	JButton bConnect;
+	JTextField ipConnect;
+	JLabel ipLabel;
+	JTextField portConnect;
+	JLabel portLabel;
 	
 	private String IP;
 	private int port = 0;
@@ -88,8 +96,24 @@ public class ClientInterface extends JFrame {
 		msgPanel.add(entreeMsg, BorderLayout.CENTER);
 		msgPanel.add(valSaisie, BorderLayout.EAST);
 		
+		// - Connect
+		
+		connect = new JPanel();
+		bConnect = new JButton("Connection");
+		ipConnect = new JTextField(defIP);
+		ipLabel = new JLabel("IP :");
+		portConnect = new JTextField(defPort);
+		portLabel = new JLabel("Port : ");
+		
+		connect.add(ipLabel);
+		connect.add(ipConnect);
+		connect.add(portLabel);
+		connect.add(portConnect);
+		connect.add(bConnect);
+		
 		// - Layout
 
+		mainPanel.add(connect, BorderLayout.NORTH);
 		mainPanel.add(msgPanel, BorderLayout.SOUTH);
 		mainPanel.add(chatBoxPanel, BorderLayout.CENTER);
 		this.add(mainPanel);
@@ -104,27 +128,18 @@ public class ClientInterface extends JFrame {
 		else {
 			port = Integer.parseInt(tmp);
 		}
-		String tmp2 = JOptionPane.showInputDialog(mainPanel, "Saisir le port cible", defPort);
+		/*String tmp2 = JOptionPane.showInputDialog(mainPanel, "Saisir le port cible", defPort);
 		if (tmp2 == null || tmp.isEmpty() ) forceClose();
 		else {
 			port2 = Integer.parseInt(tmp);
-		}
+		}*/
 		pseudo = JOptionPane.showInputDialog(mainPanel, "Saisir le pseudo", defPseudo);
 		if (pseudo == null || pseudo.isEmpty()) forceClose();
 		
-		peer = new ChordPeer(pseudo, port2, IP);
+		peer = new ChordPeer(pseudo, port, IP);
 		
 		System.out.println("IP : " + peer.getMe().getIp() + ", Port : " + peer.getMe().getPort() + ", Pseudo : " + peer.getMe().getPseudo() );
 
-		try {
-			Socket soc = new Socket(peer.getMe().getIp(), peer.getMe().getPort());
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			//mauvaise saisie info || premier node
-			e1.printStackTrace();
-		}
 		
 		//valSaisie.setMnemonic(KeyEvent.VK_ENTER);
 		
@@ -139,11 +154,38 @@ public class ClientInterface extends JFrame {
 					m += entreeMsg.getText() + "\n";
 					
 					Map message = preparerMessage(m);
+					peer.forwardMessage(message);
 					
 					chatBox.append(m);
+					
 					System.out.println("Ajout saisie");
 					entreeMsg.setText("");
 				}
+			}
+		});
+		
+		bConnect.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				String ip = ipConnect.getText();
+				int port = Integer.parseInt(portConnect.getText());
+				
+				//Recup infos
+				try {
+					//Si tout fonctionne correctement => ce n'est pas le 1er peer
+					Socket soc = new Socket(ip, port);
+					peer.joinChord(soc);
+					
+				} catch (UnknownHostException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					//mauvaise saisie info || premier node
+					e1.printStackTrace();
+				}
+				
 			}
 		});
 		
