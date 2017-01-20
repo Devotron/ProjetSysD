@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Created by JuIngong on 19/01/2017.
  */
-public class ChordPeer {
+public class ChordPeer extends Observable {
 
     private Peer me;
 
@@ -129,6 +129,15 @@ public class ChordPeer {
         }
         c2.sendToChatRoom("Blablou");
         c2.leaveChatRoom();
+    }
+
+    public Map<String, String> buildTextMessage(String text) {
+        Map<String, String> test = new HashMap<>();
+        test.put("type", "msg");
+        test.put("exp", "" + this.getMe().getId());
+        test.put("pseudo", this.getMe().getPseudo());
+        test.put("content", text);
+        return test;
     }
 
     private void startClientServer(int portNum) {
@@ -410,11 +419,10 @@ public class ChordPeer {
                 Map<String, String> msg = receivMsg(pSock);
                 if (msg != null) {
                     if ("msg".equals(msg.get("type"))) {
+                        setChanged();
+                        notifyObservers(msg);
                         if (!Integer.toString(succ.getId()).equals(msg.get("exp"))) {
-                            System.out.println(msg.get("content"));
                             forwardMessage(msg);
-                        } else {
-                            System.out.println(msg.get("content"));
                         }
                     }
                     if ("salon".equals(msg.get("type"))) {
@@ -454,11 +462,10 @@ public class ChordPeer {
                             }
                         } else if ("msg".equals(msg.get("goal"))) {
                             if (msg.get("name").equals(myChat)) {
+                                setChanged();
+                                notifyObservers(msg);
                                 if (!Integer.toString(succ.getId()).equals(msg.get("exp"))) {
-                                    System.out.println(msg.get("content"));
                                     forwardMessage(msg);
-                                } else {
-                                    System.out.println(msg.get("content"));
                                 }
                             } else {
                                 if (!Integer.toString(succ.getId()).equals(msg.get("exp"))) {
