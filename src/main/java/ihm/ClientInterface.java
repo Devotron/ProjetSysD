@@ -64,8 +64,10 @@ public class ClientInterface extends JFrame implements Observer {
 
 	public ClientInterface() {
 
+		String title = "Chat - ";
+		
 		// - Fenetre
-		setTitle("Chat - <CLIENT>");
+		setTitle(title + "<CLIENT>");
 		setSize(800, 500);
 
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -153,6 +155,7 @@ public class ClientInterface extends JFrame implements Observer {
 		
 		System.out.println("IP : " + peer.getMe().getIp() + ", Port : " + peer.getMe().getPort() + ", Pseudo : " + peer.getMe().getPseudo() );
 
+		setTitle(title + "<" + pseudo + ">");
 		
 		//valSaisie.setMnemonic(KeyEvent.VK_ENTER);
 		
