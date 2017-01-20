@@ -3,11 +3,13 @@ package ihm;
 import java.awt.BorderLayout;
 import java.awt.Color;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 
 public class ClientInterface extends JFrame {
 
@@ -16,7 +18,10 @@ public class ClientInterface extends JFrame {
 	JTextArea chatBox;
 	JScrollPane chatBoxPanel;
 
+	
+	JPanel msgPanel;
 	JTextField entreeMsg;
+	JButton valSaisie;
 
 	public ClientInterface() {
 
@@ -40,13 +45,27 @@ public class ClientInterface extends JFrame {
 		chatBoxPanel = new JScrollPane(chatBox);
 		chatBoxPanel.setSize(800, 250);
 
+		// Panel message
+		
+		msgPanel = new JPanel();
+		BorderLayout msgl = new BorderLayout();
+		
+		
 		// - TexteField
 
 		entreeMsg = new JTextField();
 
+		// - Validation saisie
+		
+		valSaisie = new JButton("ENVOYER");
+		
+		msgPanel.setLayout(msgl);
+		msgPanel.add(entreeMsg, BorderLayout.CENTER);
+		msgPanel.add(valSaisie, BorderLayout.EAST);
+		
 		// - Layout
 
-		mainPanel.add(entreeMsg, BorderLayout.SOUTH);
+		mainPanel.add(msgPanel, BorderLayout.SOUTH);
 		mainPanel.add(chatBoxPanel, BorderLayout.CENTER);
 		this.add(mainPanel);
 		setVisible(true);
